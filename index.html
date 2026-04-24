@@ -133,9 +133,11 @@ function getParams(){
   return {
     clientMac: p.get("clientMac"),
     apMac: p.get("apMac"),
-    ssid: p.get("ssid"),
+    ssid: p.get("ssidName"),   // ✅ FIXED
+    token: p.get("t"),         // ✅ FIXED (Omada uses "t")
     redirectUrl: p.get("redirectUrl") || p.get("url") || p.get("u"),
-    token: p.get("token") || p.get("authToken") || p.get("cliToken")
+    clientIp: p.get("clientIp"),
+    site: p.get("site")
   };
 }
 
