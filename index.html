@@ -45,32 +45,45 @@
 
 <script>
 
-async function loginWithVoucher(){
-  const code = document.getElementById("voucher")
-    .value
-    .trim()
-    .toUpperCase();
-  console.log("Voucher entered:", code);
 
-  if(!code){
-    document.getElementById("status").innerText = "Enter voucher";
-    return;
-  }
 
-  const params = new URLSearchParams(window.location.search);
 
-  try{
-    const ref = db.collection("vouchers").doc(code);
-    const doc = await ref.get();
-    console.log("Firestore doc exists:", doc.exists);
 
-    if(!doc.exists){
+async function loginWithVoucher() {
+
+  try {
+
+    const code = document.getElementById("voucher")
+      .value
+      .trim()
+      .toUpperCase();
+
+    console.log("Voucher entered:", code);
+
+    if (!code) {
+      document.getElementById("status").innerText = "Enter voucher";
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+
+    // 🔍 FIND VOUCHER
+    const snapshot = await db
+      .collection("vouchers")
+      .where("code", "==", code)
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
       throw new Error("Invalid voucher");
     }
 
+    const doc = snapshot.docs[0];
+    const ref = doc.ref;
     const data = doc.data();
 
-    if(data.used){
+    // ❌ CHECK IF USED
+    if (data.used) {
       throw new Error("Voucher already used");
     }
 
@@ -81,59 +94,50 @@ async function loginWithVoucher(){
     });
 
     // ✅ SAVE SESSION
-await db.collection("voucher_sessions").add({
-  voucher: code,
-  clientMac: params.get("clientMac"),
-  apMac: params.get("apMac"),
-  ssid: params.get("ssidName") || params.get("ssid"),
-  timestamp: new Date()
-});
+    await db.collection("voucher_sessions").add({
+      voucher: code,
+      clientMac: params.get("clientMac"),
+      apMac: params.get("apMac"),
+      ssid: params.get("ssidName") || params.get("ssid"),
+      timestamp: new Date()
+    });
 
+    document.getElementById("status").innerText = "✅ Connected...";
 
+    // 🔥 OMADA AUTH REDIRECT
+    setTimeout(() => {
 
+      const omada = getParams();
 
+      console.log("Omada params:", omada);
 
+      if (
+        omada.clientMac &&
+        omada.apMac &&
+        omada.token
+      ) {
 
-document.getElementById("status").innerText = "✅ Connected...";
+        const authUrl =
+          `https://192.168.1.206:8843/portal/auth` +
+          `?clientMac=${encodeURIComponent(omada.clientMac)}` +
+          `&apMac=${encodeURIComponent(omada.apMac)}` +
+          `&ssid=${encodeURIComponent(omada.ssid || "")}` +
+          `&token=${encodeURIComponent(omada.token)}`;
 
-setTimeout(() => {
+        console.log("AUTH URL:", authUrl);
 
-  const omada = getParams();
+        window.location.href = authUrl;
 
-  console.log("Omada params:", omada);
+      } else {
+        document.getElementById("status").innerText =
+          "❌ Missing Omada authentication parameters";
+      }
 
-  if (
-    omada.clientMac &&
-    omada.apMac &&
-    omada.token
-  ) {
+    }, 1200);
 
-    const authUrl =
-      `https://192.168.1.206:8843/portal/auth` +
-      `?clientMac=${encodeURIComponent(omada.clientMac)}` +
-      `&apMac=${encodeURIComponent(omada.apMac)}` +
-      `&ssid=${encodeURIComponent(omada.ssid || "")}` +
-      `&token=${encodeURIComponent(omada.token)}`;
-
-    console.log("AUTH URL:", authUrl);
-
-    window.location.href = authUrl;
-
-  } else {
-    document.getElementById("status").innerText =
-      "❌ Missing Omada authentication parameters";
-  }
-
-}, 1200);
-
-
-
-
-
-
-
-  }catch(err){
+  } catch (err) {
     document.getElementById("status").innerText = err.message;
+    console.log("ERROR:", err);
   }
 }
 
