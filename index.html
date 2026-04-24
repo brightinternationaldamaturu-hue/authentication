@@ -108,12 +108,12 @@ setTimeout(() => {
     omada.token
   ) {
 
-const authUrl =
-  `https://192.168.1.206:8043/portal/auth` +
-  `?clientMac=${encodeURIComponent(omada.clientMac)}` +
-  `&apMac=${encodeURIComponent(omada.apMac)}` +
-  `&ssid=${encodeURIComponent(omada.ssid || "")}` +
-  `&token=${encodeURIComponent(omada.token)}`;
+    const authUrl =
+      `https://192.168.1.206:8843/portal/auth` +
+      `?clientMac=${encodeURIComponent(omada.clientMac)}` +
+      `&apMac=${encodeURIComponent(omada.apMac)}` +
+      `&ssid=${encodeURIComponent(omada.ssid || "")}` +
+      `&token=${encodeURIComponent(omada.token)}`;
 
     console.log("AUTH URL:", authUrl);
 
