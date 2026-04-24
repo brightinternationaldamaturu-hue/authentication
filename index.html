@@ -105,17 +105,18 @@ setTimeout(() => {
     omada.url ||
     omada.u;
 
-  console.log("Redirect target:", redirect);
+  console.log("Final redirect:", redirect);
 
-  if (redirect) {
-    window.location.href = decodeURIComponent(redirect);
-  } else {
+  if (!redirect) {
     document.getElementById("status").innerText =
-      "⚠️ Missing redirect URL";
+      "⚠️ Missing redirect URL from Omada";
+    return;
   }
 
-}, 1500);
+  // 🚀 IMPORTANT: direct redirect (no decoding)
+  window.location.href = redirect;
 
+}, 1200);
 
 
 
