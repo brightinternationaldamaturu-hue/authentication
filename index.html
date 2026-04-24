@@ -81,41 +81,53 @@ async function loginWithVoucher(){
     });
 
     // ✅ SAVE SESSION
-    await db.collection("voucher_sessions").add({
-      voucher: code,
-      clientMac: params.get("clientMac"),
-      apMac: params.get("apMac"),
-      ssid: params.get("ssid"),
-      timestamp: new Date()
-    });
+await db.collection("voucher_sessions").add({
+  voucher: code,
+  clientMac: params.get("clientMac"),
+  apMac: params.get("apMac"),
+  ssid: params.get("ssidName") || params.get("ssid"),
+  timestamp: new Date()
+});
 
-    document.getElementById("status").innerText = "✅ Connected...";
 
-// 🔥 COMPLETE OMADA AUTHENTICATION
-const omada = getParams();
 
-setTimeout(()=>{
 
-  if(omada.clientMac && omada.apMac && omada.token){
 
-const omada = getParams();
 
-if(omada.redirectUrl){
-  window.location.href = decodeURIComponent(omada.redirectUrl);
-} else {
-  document.getElementById("status").innerText = "⚠️ Missing redirect URL";
-}
- else {
-    document.getElementById("status").innerText = "⚠️ Missing Omada parameters";
-    console.log("Omada params:", omada);
+document.getElementById("status").innerText = "✅ Connected...";
+
+setTimeout(() => {
+
+  const omada = getParams();
+
+  const redirect =
+    omada.redirectUrl ||
+    omada.url ||
+    omada.u;
+
+  console.log("Redirect target:", redirect);
+
+  if (redirect) {
+    window.location.href = decodeURIComponent(redirect);
+  } else {
+    document.getElementById("status").innerText =
+      "⚠️ Missing redirect URL";
   }
 
-},1500);
+}, 1500);
+
+
+
+
+
+
+
 
   }catch(err){
     document.getElementById("status").innerText = err.message;
   }
 }
+
 
 
 const firebaseConfig = {
@@ -128,19 +140,28 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+
+
+
+
 function getParams(){
   const p = new URLSearchParams(window.location.search);
 
   return {
     clientMac: p.get("clientMac"),
     apMac: p.get("apMac"),
-    ssid: p.get("ssidName"),   // ✅ FIXED
-    token: p.get("t"),         // ✅ FIXED (Omada uses "t")
+    ssid: p.get("ssidName") || p.get("ssid"),
+    token: p.get("t"),
     redirectUrl: p.get("redirectUrl") || p.get("url") || p.get("u"),
     clientIp: p.get("clientIp"),
     site: p.get("site")
   };
 }
+
+
+
+
+
 
 async function login(){
   const email = document.getElementById("email").value;
@@ -161,7 +182,7 @@ async function login(){
         clientMac: params.clientMac,
         apMac: params.apMac,
         ssid: params.ssid,
-        cliToken: params.cliToken,
+        cliToken: params.token,
         timestamp: new Date()
       });
 
