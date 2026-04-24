@@ -46,7 +46,11 @@
 <script>
 
 async function loginWithVoucher(){
-  const code = document.getElementById("voucher").value.trim();
+  const code = document.getElementById("voucher")
+    .value
+    .trim()
+    .toUpperCase();
+  console.log("Voucher entered:", code);
 
   if(!code){
     document.getElementById("status").innerText = "Enter voucher";
@@ -58,6 +62,7 @@ async function loginWithVoucher(){
   try{
     const ref = db.collection("vouchers").doc(code);
     const doc = await ref.get();
+    console.log("Firestore doc exists:", doc.exists);
 
     if(!doc.exists){
       throw new Error("Invalid voucher");
@@ -86,10 +91,25 @@ async function loginWithVoucher(){
 
     document.getElementById("status").innerText = "✅ Connected...";
 
-    // 🔥 REDIRECT BACK TO INTERNET
-    setTimeout(()=>{
-      window.location.href = "http://connectivitycheck.gstatic.com/generate_204";
-    },1500);
+// 🔥 COMPLETE OMADA AUTHENTICATION
+const omada = getParams();
+
+setTimeout(()=>{
+
+  if(omada.clientMac && omada.apMac && omada.token){
+
+    const loginUrl = `http://192.168.1.206:8088/portal/auth?clientMac=${omada.clientMac}&apMac=${omada.apMac}&ssid=${encodeURIComponent(omada.ssid)}&token=${omada.token}`;
+
+    console.log("Redirecting to Omada:", loginUrl);
+
+    window.location.href = loginUrl;
+
+  } else {
+    document.getElementById("status").innerText = "⚠️ Missing Omada parameters";
+    console.log("Omada params:", omada);
+  }
+
+},1500);
 
   }catch(err){
     document.getElementById("status").innerText = err.message;
@@ -98,7 +118,7 @@ async function loginWithVoucher(){
 
 
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
+  apiKey: "AIzaSyDaZH5kn_mmxap3jOyw3Yhq55d936Jhl0g",
   authDomain: "biva-system.firebaseapp.com",
   projectId: "biva-system"
 };
@@ -109,11 +129,13 @@ const db = firebase.firestore();
 
 function getParams(){
   const p = new URLSearchParams(window.location.search);
+
   return {
     clientMac: p.get("clientMac"),
     apMac: p.get("apMac"),
     ssid: p.get("ssid"),
-    cliToken: p.get("token") || p.get("cliToken")
+    redirectUrl: p.get("redirectUrl") || p.get("url") || p.get("u"),
+    token: p.get("token") || p.get("authToken") || p.get("cliToken")
   };
 }
 
@@ -144,7 +166,14 @@ async function login(){
 
     // 🔥 IMPORTANT: REDIRECT BACK TO INTERNET
     setTimeout(() => {
-      window.location.href = "http://connectivitycheck.gstatic.com/generate_204";
+      const params = getParams();
+
+// 🔥 VERY IMPORTANT
+if(params.redirectUrl){
+  window.location.href = decodeURIComponent(params.redirectUrl);
+} else {
+  document.getElementById("status").innerText = "⚠️ Missing redirect URL";
+}
     }, 1500);
 
   }catch(err){
