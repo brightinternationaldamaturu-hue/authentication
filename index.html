@@ -98,13 +98,14 @@ setTimeout(()=>{
 
   if(omada.clientMac && omada.apMac && omada.token){
 
-    const loginUrl = `http://192.168.1.206:8088/portal/auth?clientMac=${omada.clientMac}&apMac=${omada.apMac}&ssid=${encodeURIComponent(omada.ssid)}&token=${omada.token}`;
+const omada = getParams();
 
-    console.log("Redirecting to Omada:", loginUrl);
-
-    window.location.href = loginUrl;
-
-  } else {
+if(omada.redirectUrl){
+  window.location.href = decodeURIComponent(omada.redirectUrl);
+} else {
+  document.getElementById("status").innerText = "⚠️ Missing redirect URL";
+}
+ else {
     document.getElementById("status").innerText = "⚠️ Missing Omada parameters";
     console.log("Omada params:", omada);
   }
