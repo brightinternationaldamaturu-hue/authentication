@@ -37,14 +37,66 @@
 
 <h2>🌐 Connect to BIVA Network</h2>
 
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
-
-<button onclick="login()">Login</button>
+<input id="voucher" placeholder="Enter Voucher Code">
+<button onclick="loginWithVoucher()">Connect</button>
+<p id="status"></p>
 
 <p id="status"></p>
 
 <script>
+
+async function loginWithVoucher(){
+  const code = document.getElementById("voucher").value.trim();
+
+  if(!code){
+    document.getElementById("status").innerText = "Enter voucher";
+    return;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+
+  try{
+    const ref = db.collection("vouchers").doc(code);
+    const doc = await ref.get();
+
+    if(!doc.exists){
+      throw new Error("Invalid voucher");
+    }
+
+    const data = doc.data();
+
+    if(data.used){
+      throw new Error("Voucher already used");
+    }
+
+    // ✅ MARK AS USED
+    await ref.update({
+      used: true,
+      usedAt: new Date()
+    });
+
+    // ✅ SAVE SESSION
+    await db.collection("voucher_sessions").add({
+      voucher: code,
+      clientMac: params.get("clientMac"),
+      apMac: params.get("apMac"),
+      ssid: params.get("ssid"),
+      timestamp: new Date()
+    });
+
+    document.getElementById("status").innerText = "✅ Connected...";
+
+    // 🔥 REDIRECT BACK TO INTERNET
+    setTimeout(()=>{
+      window.location.href = "http://connectivitycheck.gstatic.com/generate_204";
+    },1500);
+
+  }catch(err){
+    document.getElementById("status").innerText = err.message;
+  }
+}
+
+
 const firebaseConfig = {
   apiKey: "YOUR_KEY",
   authDomain: "biva-system.firebaseapp.com",
