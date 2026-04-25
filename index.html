@@ -105,35 +105,31 @@ async function loginWithVoucher() {
     document.getElementById("status").innerText = "✅ Connected...";
 
     // 🔥 OMADA AUTH REDIRECT
-    setTimeout(() => {
+setTimeout(() => {
 
-      const omada = getParams();
+  const omada = getParams();
 
-      console.log("Omada params:", omada);
+  if (
+    omada.clientMac &&
+    omada.apMac &&
+    omada.token
+  ) {
 
-      if (
-        omada.clientMac &&
-        omada.apMac &&
-        omada.token
-      ) {
+    const authUrl =
+      `https://192.168.1.206:8843/portal/auth` +  // ✅ use your controller
+      `?clientMac=${encodeURIComponent(omada.clientMac)}` +
+      `&apMac=${encodeURIComponent(omada.apMac)}` +
+      `&ssid=${encodeURIComponent(omada.ssid || "")}` +
+      `&token=${encodeURIComponent(omada.token)}`;
 
-        const authUrl =
-          `https://192.168.1.206:8843/portal/auth` +
-          `?clientMac=${encodeURIComponent(omada.clientMac)}` +
-          `&apMac=${encodeURIComponent(omada.apMac)}` +
-          `&ssid=${encodeURIComponent(omada.ssid || "")}` +
-          `&token=${encodeURIComponent(omada.token)}`;
+    window.location.href = authUrl;
 
-        console.log("AUTH URL:", authUrl);
+  } else {
+    document.getElementById("status").innerText =
+      "❌ Missing Omada parameters";
+  }
 
-        window.location.href = authUrl;
-
-      } else {
-        document.getElementById("status").innerText =
-          "❌ Missing Omada authentication parameters";
-      }
-
-    }, 1200);
+}, 1200);
 
   } catch (err) {
     document.getElementById("status").innerText = err.message;
@@ -157,6 +153,7 @@ const db = firebase.firestore();
 
 
 
+
 function getParams(){
   const p = new URLSearchParams(window.location.search);
 
@@ -164,7 +161,7 @@ function getParams(){
     clientMac: p.get("clientMac"),
     apMac: p.get("apMac"),
     ssid: p.get("ssidName") || p.get("ssid"),
-    token: p.get("t"),
+    token: p.get("token") || p.get("t"), // ✅ FIXED
     redirectUrl: p.get("redirectUrl") || p.get("url") || p.get("u"),
     clientIp: p.get("clientIp"),
     site: p.get("site")
