@@ -44,7 +44,7 @@
 
 
 <script>
-
+console.log("FULL URL:", window.location.href);
 
 
 
@@ -153,16 +153,15 @@ function getParams(){
   const p = new URLSearchParams(window.location.search);
 
   return {
-    clientMac: p.get("clientMac"),
-    apMac: p.get("apMac"),
+    clientMac: p.get("clientMac") || p.get("mac"),
+    apMac: p.get("apMac") || p.get("ap"),
     ssid: p.get("ssidName") || p.get("ssid"),
-    token: p.get("token") || p.get("t"), // ✅ FIXED
+    token: p.get("token") || p.get("t") || p.get("authToken"),
     redirectUrl: p.get("redirectUrl") || p.get("url") || p.get("u"),
-    clientIp: p.get("clientIp"),
+    clientIp: p.get("clientIp") || p.get("ip"),
     site: p.get("site")
   };
 }
-
 
 
 
