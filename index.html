@@ -116,15 +116,20 @@ setTimeout(() => {
   }
 
   const authUrl =
-    `http://192.168.1.1:8088/portal/auth` +
+    `https://192.168.1.1:8043/portal/auth` +
     `?clientMac=${encodeURIComponent(omada.clientMac)}` +
     `&apMac=${encodeURIComponent(omada.apMac)}` +
     `&ssid=${encodeURIComponent(omada.ssid || "")}` +
     `&token=${encodeURIComponent(omada.token)}`;
 
+  console.log("Redirecting to:", authUrl);
+
   window.location.href = authUrl;
 
 }, 1200);
+
+
+
 
   } catch (err) {
     document.getElementById("status").innerText = err.message;
