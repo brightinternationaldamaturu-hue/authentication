@@ -48,12 +48,12 @@
 const params = new URLSearchParams(window.location.search);
 
 const OMADA = {
-  clientMac: params.get("clientMac"),
-  apMac: params.get("apMac"),
-  ssid: params.get("ssidName") || params.get("ssid"),
-  token: params.get("token") || params.get("t"),
-  redirectUrl: params.get("redirectUrl")
-};
+	clientMac: OMADA.clientMac,
+	apMac: OMADA.apMac,
+	ssid: OMADA.ssid,
+ 	token: params.get("token") || params.get("t"),
+  	redirectUrl: params.get("redirectUrl")
+	};
 
 
 const hasOmada =
@@ -116,20 +116,21 @@ async function loginWithVoucher() {
     // 🔥 OMADA AUTH REDIRECT
 setTimeout(() => {
 
-  if (!hasOmada) {
+  if (hasOmada) {
+
+    const authUrl =
+      `https://192.168.1.206:8043/portal/auth` +
+      `?clientMac=${encodeURIComponent(OMADA.clientMac)}` +
+      `&apMac=${encodeURIComponent(OMADA.apMac)}` +
+      `&token=${encodeURIComponent(OMADA.token)}` +
+      `&ssid=${encodeURIComponent(OMADA.ssid || "")}`;
+
+    window.location.href = authUrl;
+
+  } else {
     document.getElementById("status").innerText =
-      "❌ Missing Omada parameters (not portal mode)";
-    return;
+      "✅ Voucher valid. (No Omada redirect detected)";
   }
-
-  const authUrl =
-    `https://192.168.1.206:8043/portal/auth` +
-    `?clientMac=${encodeURIComponent(OMADA.clientMac)}` +
-    `&apMac=${encodeURIComponent(OMADA.apMac)}` +
-    `&token=${encodeURIComponent(OMADA.token)}` +
-    `&ssid=${encodeURIComponent(OMADA.ssid || "")}`;
-
-  window.location.href = authUrl;
 
 }, 1200);
 
