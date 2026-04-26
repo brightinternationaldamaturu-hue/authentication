@@ -146,7 +146,7 @@ async function loginWithVoucher() {
 
       // ✅ OPTION 2: FALLBACK TO MANUAL AUTH
       const authUrl =
-        `http://192.168.1.1:8088/portal/auth` +
+        `https://192.168.1.206:8043/portal/auth` +
         `?clientMac=${encodeURIComponent(omada.clientMac)}` +
         `&apMac=${encodeURIComponent(omada.apMac)}` +
         `&ssid=${encodeURIComponent(omada.ssid || "")}` +
