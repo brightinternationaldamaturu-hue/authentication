@@ -109,14 +109,20 @@ setTimeout(() => {
 
   const omada = getParams();
 
-  const redirect = omada.redirectUrl;
-
-  if (redirect) {
-    window.location.href = decodeURIComponent(redirect);
-  } else {
+  if (!omada.clientMac || !omada.apMac || !omada.token) {
     document.getElementById("status").innerText =
-      "⚠️ Missing redirect URL from Omada";
+      "❌ Missing Omada parameters";
+    return;
   }
+
+  const authUrl =
+    `http://192.168.1.1:8088/portal/auth` +
+    `?clientMac=${encodeURIComponent(omada.clientMac)}` +
+    `&apMac=${encodeURIComponent(omada.apMac)}` +
+    `&ssid=${encodeURIComponent(omada.ssid || "")}` +
+    `&token=${encodeURIComponent(omada.token)}`;
+
+  window.location.href = authUrl;
 
 }, 1200);
 
