@@ -45,15 +45,16 @@
 
 <script>
 
+
 const params = new URLSearchParams(window.location.search);
 
 const OMADA = {
-	clientMac: OMADA.clientMac,
-	apMac: OMADA.apMac,
-	ssid: OMADA.ssid,
- 	token: params.get("token") || params.get("t"),
-  	redirectUrl: params.get("redirectUrl")
-	};
+  clientMac: params.get("clientMac"),
+  apMac: params.get("apMac"),
+  ssid: params.get("ssidName") || params.get("ssid"),
+  token: params.get("token") || params.get("t"),
+  redirectUrl: params.get("redirectUrl")
+};
 
 
 const hasOmada =
