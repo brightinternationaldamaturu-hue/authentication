@@ -41,7 +41,7 @@
 <button onclick="loginWithVoucher()">Connect</button>
 <p id="status"></p>
 
-<p id="status"></p>
+
 
 <script>
 
@@ -109,20 +109,14 @@ setTimeout(() => {
 
   const omada = getParams();
 
-  if (!omada.clientMac || !omada.apMac || !omada.token) {
+  const redirect = omada.redirectUrl;
+
+  if (redirect) {
+    window.location.href = decodeURIComponent(redirect);
+  } else {
     document.getElementById("status").innerText =
-      "❌ Missing Omada parameters";
-    return;
+      "⚠️ Missing redirect URL from Omada";
   }
-
-  const authUrl =
-    `https://192.168.1.206:8043/portal/auth` +
-    `?clientMac=${encodeURIComponent(omada.clientMac)}` +
-    `&apMac=${encodeURIComponent(omada.apMac)}` +
-    `&ssid=${encodeURIComponent(omada.ssid || "")}` +
-    `&token=${encodeURIComponent(omada.token)}`;
-
-  window.location.href = authUrl;
 
 }, 1200);
 
