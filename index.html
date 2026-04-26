@@ -109,25 +109,20 @@ setTimeout(() => {
 
   const omada = getParams();
 
-  if (
-    omada.clientMac &&
-    omada.apMac &&
-    omada.token
-  ) {
-
-    const authUrl =
-      `https://192.168.1.206:8843/portal/auth` +  // ✅ use your controller
-      `?clientMac=${encodeURIComponent(omada.clientMac)}` +
-      `&apMac=${encodeURIComponent(omada.apMac)}` +
-      `&ssid=${encodeURIComponent(omada.ssid || "")}` +
-      `&token=${encodeURIComponent(omada.token)}`;
-
-    window.location.href = authUrl;
-
-  } else {
+  if (!omada.clientMac || !omada.apMac || !omada.token) {
     document.getElementById("status").innerText =
       "❌ Missing Omada parameters";
+    return;
   }
+
+  const authUrl =
+    `http://192.168.1.206:8043/portal/auth` +
+    `?clientMac=${encodeURIComponent(omada.clientMac)}` +
+    `&apMac=${encodeURIComponent(omada.apMac)}` +
+    `&ssid=${encodeURIComponent(omada.ssid || "")}` +
+    `&token=${encodeURIComponent(omada.token)}`;
+
+  window.location.href = authUrl;
 
 }, 1200);
 
