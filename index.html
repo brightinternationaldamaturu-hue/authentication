@@ -5,7 +5,6 @@
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <style>
@@ -41,31 +40,52 @@
 <button onclick="loginWithVoucher()">Connect</button>
 <p id="status"></p>
 
-
-
 <script>
+
+// 🔍 SHOW FULL URL FOR DEBUG
 console.log("FULL URL:", window.location.href);
 
+// 🔥 FIREBASE CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyDaZH5kn_mmxap3jOyw3Yhq55d936Jhl0g",
+  authDomain: "biva-system.firebaseapp.com",
+  projectId: "biva-system"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
 
+// 🔥 GET OMADA PARAMETERS (ROBUST)
+function getParams(){
+  const p = new URLSearchParams(window.location.search);
 
+  return {
+    clientMac: p.get("clientMac") || p.get("mac"),
+    apMac: p.get("apMac") || p.get("ap"),
+    ssid: p.get("ssidName") || p.get("ssid"),
+    token: p.get("token") || p.get("t") || p.get("authToken"),
+    redirectUrl: p.get("redirectUrl") || p.get("url") || p.get("u"),
+    clientIp: p.get("clientIp") || p.get("ip"),
+    site: p.get("site")
+  };
+}
+
+
+// 🚀 MAIN LOGIN FUNCTION
 async function loginWithVoucher() {
 
   try {
 
-    const code = document.getElementById("voucher")
-      .value
-      .trim()
-      .toUpperCase();
-
-    console.log("Voucher entered:", code);
+    const status = document.getElementById("status");
+    const code = document.getElementById("voucher").value.trim().toUpperCase();
 
     if (!code) {
-      document.getElementById("status").innerText = "Enter voucher";
+      status.innerText = "Enter voucher";
       return;
     }
 
-    const params = new URLSearchParams(window.location.search);
+    status.innerText = "Checking voucher...";
 
     // 🔍 FIND VOUCHER
     const snapshot = await db
@@ -82,54 +102,61 @@ async function loginWithVoucher() {
     const ref = doc.ref;
     const data = doc.data();
 
-    // ❌ CHECK IF USED
     if (data.used) {
       throw new Error("Voucher already used");
     }
 
-    // ✅ MARK AS USED
+    // ✅ MARK USED
     await ref.update({
       used: true,
       usedAt: new Date()
     });
 
-    // ✅ SAVE SESSION
+    // 🔍 GET OMADA PARAMS
+    const omada = getParams();
+
+    console.log("OMADA PARAMS:", omada);
+
+    // SAVE SESSION (optional but good)
     await db.collection("voucher_sessions").add({
       voucher: code,
-      clientMac: params.get("clientMac"),
-      apMac: params.get("apMac"),
-      ssid: params.get("ssidName") || params.get("ssid"),
+      clientMac: omada.clientMac,
+      apMac: omada.apMac,
+      ssid: omada.ssid,
       timestamp: new Date()
     });
 
-    document.getElementById("status").innerText = "✅ Connected...";
+    status.innerText = "✅ Voucher accepted... Connecting";
 
-    // 🔥 OMADA AUTH REDIRECT
-setTimeout(() => {
+    // 🔥 HANDLE OMADA AUTH
+    setTimeout(() => {
 
-  const omada = getParams();
+      // ❌ NOT FROM OMADA (TEST MODE)
+      if (!omada.clientMac || !omada.apMac || !omada.token) {
+        status.innerText = "⚠️ Not from Wi-Fi portal (Test mode)";
+        return;
+      }
 
-  if (!omada.clientMac || !omada.apMac || !omada.token) {
-    document.getElementById("status").innerText =
-      "❌ Missing Omada parameters";
-    return;
-  }
+      // ✅ OPTION 1: USE redirectUrl (BEST)
+      if (omada.redirectUrl) {
+        console.log("Using redirectUrl:", omada.redirectUrl);
+        window.location.href = decodeURIComponent(omada.redirectUrl);
+        return;
+      }
 
-  const authUrl =
-    `https://192.168.1.1:8043/portal/auth` +
-    `?clientMac=${encodeURIComponent(omada.clientMac)}` +
-    `&apMac=${encodeURIComponent(omada.apMac)}` +
-    `&ssid=${encodeURIComponent(omada.ssid || "")}` +
-    `&token=${encodeURIComponent(omada.token)}`;
+      // ✅ OPTION 2: FALLBACK TO MANUAL AUTH
+      const authUrl =
+        `http://192.168.1.1:8088/portal/auth` +
+        `?clientMac=${encodeURIComponent(omada.clientMac)}` +
+        `&apMac=${encodeURIComponent(omada.apMac)}` +
+        `&ssid=${encodeURIComponent(omada.ssid || "")}` +
+        `&token=${encodeURIComponent(omada.token)}`;
 
-  console.log("Redirecting to:", authUrl);
+      console.log("Fallback auth URL:", authUrl);
 
-  window.location.href = authUrl;
+      window.location.href = authUrl;
 
-}, 1200);
-
-
-
+    }, 1200);
 
   } catch (err) {
     document.getElementById("status").innerText = err.message;
@@ -137,82 +164,6 @@ setTimeout(() => {
   }
 }
 
-
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDaZH5kn_mmxap3jOyw3Yhq55d936Jhl0g",
-  authDomain: "biva-system.firebaseapp.com",
-  projectId: "biva-system"
-};
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-
-
-
-
-
-function getParams(){
-  const p = new URLSearchParams(window.location.search);
-
-  return {
-    clientMac: p.get("clientMac") || p.get("mac"),
-    apMac: p.get("apMac") || p.get("ap"),
-    ssid: p.get("ssidName") || p.get("ssid"),
-    token: p.get("token") || p.get("t") || p.get("authToken"),
-    redirectUrl: p.get("redirectUrl") || p.get("url") || p.get("u"),
-    clientIp: p.get("clientIp") || p.get("ip"),
-    site: p.get("site")
-  };
-}
-
-
-
-
-
-async function login(){
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  try{
-    const res = await auth.signInWithEmailAndPassword(email, password);
-    const user = res.user;
-
-    const params = getParams();
-
-    // ✅ SAVE SESSION TO FIREBASE
-    await db.collection("users")
-      .doc(user.uid)
-      .collection("omada_sessions")
-      .add({
-        email: user.email,
-        clientMac: params.clientMac,
-        apMac: params.apMac,
-        ssid: params.ssid,
-        cliToken: params.token,
-        timestamp: new Date()
-      });
-
-    document.getElementById("status").innerText = "✅ Connected! Redirecting...";
-
-    // 🔥 IMPORTANT: REDIRECT BACK TO INTERNET
-    setTimeout(() => {
-      const params = getParams();
-
-// 🔥 VERY IMPORTANT
-if(params.redirectUrl){
-  window.location.href = decodeURIComponent(params.redirectUrl);
-} else {
-  document.getElementById("status").innerText = "⚠️ Missing redirect URL";
-}
-    }, 1500);
-
-  }catch(err){
-    document.getElementById("status").innerText = err.message;
-  }
-}
 </script>
 
 </body>
